@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
 class CustomUser(AbstractUser):
@@ -8,36 +9,86 @@ class CustomUser(AbstractUser):
         ('admin', 'Admin'),
         ('user', 'User'),
     )
+    is_verified = models.BooleanField(default=False)
     role = models.CharField(max_length=10, choices=USER_ROLES, default='user')
+    email = models.EmailField(_('email address'), unique=True,
+                              error_messages={'unique': "A user with that email already exists."})
+
+    username = models.CharField(max_length=150, unique=False, blank=True, null=True)
 
     groups = models.ManyToManyField(
         Group,
         related_name='customuser_set',
         blank=True,
-        help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.',
+        help_text=_(
+            'The groups this user belongs to. A user will get all permissions granted to each of their groups.'),
         related_query_name='customuser',
     )
+
     user_permissions = models.ManyToManyField(
         Permission,
         related_name='customuser_set',
         blank=True,
-        help_text='Specific permissions for this user.',
+        help_text=_('Specific permissions for this user.'),
         related_query_name='customuser',
     )
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name', 'last_name']
+
     def __str__(self):
-        return self.username
+        return self.email
 
 
 class Ad(models.Model):
-    AD_TYPES = (
+    CITY_CHOICES = [
+        ('Berovo', 'Berovo'),
+        ('Bitola', 'Bitola'),
+        ('Bogdanci', 'Bogdanci'),
+        ('Debar', 'Debar'),
+        ('Delčevo', 'Delčevo'),
+        ('Demir Hisar', 'Demir Hisar'),
+        ('Gevgelija', 'Gevgelija'),
+        ('Gostivar', 'Gostivar'),
+        ('Kavadarci', 'Kavadarci'),
+        ('Kičevo', 'Kičevo'),
+        ('Kočani', 'Kočani'),
+        ('Kriva Palanka', 'Kriva Palanka'),
+        ('Kruševo', 'Kruševo'),
+        ('Kumanovo', 'Kumanovo'),
+        ('Makedonska Kamenica', 'Makedonska Kamenica'),
+        ('Makedonski Brod', 'Makedonski Brod'),
+        ('Negotino', 'Negotino'),
+        ('Ohrid', 'Ohrid'),
+        ('Prilep', 'Prilep'),
+        ('Probistip', 'Probistip'),
+        ('Radoviš', 'Radoviš'),
+        ('Resen', 'Resen'),
+        ('Sveti Nikole', 'Sveti Nikole'),
+        ('Štip', 'Štip'),
+        ('Struga', 'Struga'),
+        ('Strumica', 'Strumica'),
+        ('Sveti Nikole', 'Sveti Nikole'),
+        ('Tearce', 'Tearce'),
+        ('Tetovo', 'Tetovo'),
+        ('Valandovo', 'Valandovo'),
+        ('Veles', 'Veles'),
+        ('Vinica', 'Vinica'),
+        ('Želino', 'Želino'),
+        ('Skopje', 'Skopje'),
+    ]
+
+    AD_TYPES = [
         ('sale', 'Sale'),
         ('rent', 'Rent'),
-    )
+    ]
+
     title = models.CharField(max_length=255)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     ad_type = models.CharField(max_length=4, choices=AD_TYPES)
+    location = models.CharField(max_length=150, choices=CITY_CHOICES, default=CITY_CHOICES[0][0])
+    address = models.CharField(max_length=150, default="Macedonia")
     imageUrl = models.CharField(max_length=500, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

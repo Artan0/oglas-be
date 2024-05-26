@@ -1,3 +1,61 @@
 from django.shortcuts import render
 
-# Create your views here.
+from rest_framework import viewsets, permissions
+from rest_framework.exceptions import ValidationError
+
+from .models import Ad, Auction, Bid, Message, Event, Wishlist
+from .serializer import AdSerializer, AuctionSerializer, BidSerializer, MessageSerializer, EventSerializer, \
+    WishlistSerializer
+from allauth.account.views import ConfirmEmailView
+
+
+class CustomConfirmEmailView(ConfirmEmailView):
+    def get(self, request, *args, **kwargs):
+        self.object = confirmation = self.get_object()
+        confirmation.confirm(request)
+        user = confirmation.email_address.user
+        user.is_verified = True
+        user.save()
+        return render(request, "account/email/email_confirmed_template.html")
+
+    def post(self, *args, **kwargs):
+        return self.get(*args, **kwargs)
+
+
+class AdViewSet(viewsets.ModelViewSet):
+    queryset = Ad.objects.all()
+    serializer_class = AdSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
+class AuctionViewSet(viewsets.ModelViewSet):
+    queryset = Auction.objects.all()
+    serializer_class = AuctionSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+
+class BidViewSet(viewsets.ModelViewSet):
+    queryset = Bid.objects.all()
+    serializer_class = BidSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+
+class MessageViewSet(viewsets.ModelViewSet):
+    queryset = Message.objects.all()
+    serializer_class = MessageSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class EventViewSet(viewsets.ModelViewSet):
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+
+class WishlistViewSet(viewsets.ModelViewSet):
+    queryset = Wishlist.objects.all()
+    serializer_class = WishlistSerializer
+    permission_classes = [permissions.IsAuthenticated]

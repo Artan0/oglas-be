@@ -1,5 +1,4 @@
 from django.contrib import admin
-
 from oglas.models import *
 
 # Register your models here.
