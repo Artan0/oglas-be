@@ -5,8 +5,25 @@ from rest_framework.exceptions import ValidationError
 
 from .models import Ad, Auction, Bid, Message, Event, Wishlist
 from .serializer import AdSerializer, AuctionSerializer, BidSerializer, MessageSerializer, EventSerializer, \
-    WishlistSerializer
+    WishlistSerializer, CustomRegisterSerializer
 from allauth.account.views import ConfirmEmailView
+from dj_rest_auth.registration.views import RegisterView
+
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+@api_view(['GET'])
+def get_authenticated_user_info(request):
+    user = request.user
+    user_info = {
+        'username': user.username,
+        'email': user.email,
+    }
+    return Response(user_info)
+
+
+class CustomRegisterView(RegisterView):
+    serializer_class = CustomRegisterSerializer
 
 
 class CustomConfirmEmailView(ConfirmEmailView):

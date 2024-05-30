@@ -11,11 +11,14 @@ class CustomUser(AbstractUser):
     )
     is_verified = models.BooleanField(default=False)
     role = models.CharField(max_length=10, choices=USER_ROLES, default='user')
+    phone_number = models.CharField(max_length=100, blank=True, null=True)
     email = models.EmailField(_('email address'), unique=True,
                               error_messages={'unique': "A user with that email already exists."})
 
+    first_name = models.CharField( max_length=150)
+    last_name = models.CharField(max_length=150)
     username = models.CharField(max_length=150, unique=False, blank=True, null=True)
-
+    date_of_birth = models.DateField(blank=True, null=True)
     groups = models.ManyToManyField(
         Group,
         related_name='customuser_set',
@@ -83,6 +86,14 @@ class Ad(models.Model):
         ('rent', 'Rent'),
     ]
 
+    CATEGORY_CHOICES = [
+        ('general', 'General'),
+        ('car', 'Car'),
+        ('motorcycle', 'Motorcycle'),
+        ('house', 'House'),
+        ('rent', 'Rent'),
+    ]
+
     title = models.CharField(max_length=255)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -94,6 +105,7 @@ class Ad(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
+    category = models.CharField(max_length=100, choices=CATEGORY_CHOICES, default=CATEGORY_CHOICES[0])
 
     def __str__(self):
         return self.title
@@ -151,3 +163,87 @@ class Wishlist(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s wishlist"
+
+
+# models.py
+
+class CarAd(Ad):
+    MANUFACTURER_CHOICES = [
+        ('Audi', 'Audi'),
+        ('BMW', 'BMW'),
+        ('Mercedes-Benz', 'Mercedes-Benz'),
+        ('Volkswagen', 'Volkswagen'),
+        ('Toyota', 'Toyota'),
+        ('Honda', 'Honda'),
+        ('Ford', 'Ford'),
+        ('Chevrolet', 'Chevrolet'),
+        ('Nissan', 'Nissan'),
+        ('Hyundai', 'Hyundai'),
+        ('Kia', 'Kia'),
+        ('Subaru', 'Subaru'),
+        ('Mazda', 'Mazda'),
+        ('Volvo', 'Volvo'),
+        ('Lexus', 'Lexus'),
+        ('Jeep', 'Jeep'),
+        ('Tesla', 'Tesla'),
+        ('Ferrari', 'Ferrari'),
+        ('Porsche', 'Porsche'),
+        ('Jaguar', 'Jaguar'),
+        ('Land Rover', 'Land Rover'),
+        ('Mitsubishi', 'Mitsubishi'),
+        ('Suzuki', 'Suzuki'),
+        ('Chrysler', 'Chrysler'),
+        ('Dodge', 'Dodge'),
+        ('Acura', 'Acura'),
+        ('Buick', 'Buick'),
+        ('Cadillac', 'Cadillac'),
+        ('Infiniti', 'Infiniti'),
+        ('Lincoln', 'Lincoln'),
+        ('Mini', 'Mini'),
+        ('Smart', 'Smart'),
+        ('Other', 'Other'),
+    ]
+
+    FUEL_CHOICES = [
+        ('Gasoline', 'Gasoline'),
+        ('Diesel', 'Diesel'),
+        ('Electric', 'Electric'),
+        ('Hybrid', 'Hybrid')
+    ]
+
+    COLOR_CHOICES = [
+        ('Red', 'Red'),
+        ('Blue', 'Blue'),
+        ('Green', 'Green'),
+        ('Yellow', 'Yellow'),
+        ('Black', 'Black'),
+        ('White', 'White'),
+        ('Silver', 'Silver'),
+        ('Gray', 'Gray'),
+        ('Brown', 'Brown'),
+        ('Orange', 'Orange'),
+        ('Purple', 'Purple'),
+        ('Other', 'Other'),
+    ]
+
+    CAR_TYPE_CHOICES = [
+        ('Compact Car', 'Compact Car'),
+        ('Sedan', 'Sedan'),
+        ('Hatchback', 'Hatchback'),
+        ('Estate car', 'Estate car'),
+        ('Coupe', 'Coupe'),
+        ('Cabriolet', 'Cabriolet'),
+        ('SUV', 'SUV'),
+        ('Minibus', 'Minibus'),
+        ('Other', 'Other'),
+    ]
+
+    manufacturer = models.CharField(max_length=100, choices=MANUFACTURER_CHOICES)
+    year = models.IntegerField()
+    mileage = models.IntegerField()
+    fuel_type = models.CharField(max_length=100, choices=FUEL_CHOICES)
+    color = models.CharField(max_length=100, choices=COLOR_CHOICES)
+    car_type = models.CharField(max_length=100, choices=CAR_TYPE_CHOICES)
+
+    def __str__(self):
+        return self.title

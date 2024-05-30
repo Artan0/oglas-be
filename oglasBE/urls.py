@@ -19,7 +19,8 @@ from django.urls import path, include
 from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
 
-from oglas.views import AdViewSet, AuctionViewSet, BidViewSet, MessageViewSet, EventViewSet, WishlistViewSet, CustomConfirmEmailView
+from oglas.views import AdViewSet, AuctionViewSet, BidViewSet, MessageViewSet, EventViewSet, WishlistViewSet, \
+    CustomConfirmEmailView, CustomRegisterView, get_authenticated_user_info
 
 router = DefaultRouter()
 router.register(r'ads', AdViewSet)
@@ -33,8 +34,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('dj_rest_auth.urls')),
     path('auth/registration/', include('dj_rest_auth.registration.urls')),
+    path('auth/registration/custom/', CustomRegisterView.as_view(), name='custom_register'),
     path('accounts/', include('allauth.urls')),
     path('email-confirmed/', TemplateView.as_view(template_name="account/email/email_confirmed_template.html"),
          name='email_confirmed'),
     path('accounts/confirm-email/<str:key>/', CustomConfirmEmailView.as_view(), name='account_confirm_email'),
+    path('user-info/', get_authenticated_user_info, name='get_authenticated_user_info'),
+
 ]
