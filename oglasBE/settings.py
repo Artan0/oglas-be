@@ -59,6 +59,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'oglastestmk@gmail.com'
 EMAIL_HOST_PASSWORD = 'aiikbogwaxiltydn'
 # ACCOUNT_EMAIL_VERIFICATION = 'none'
+# aiik bogw axil tydn
 
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 ACCOUNT_EMAIL_REQUIRED = True
@@ -67,7 +68,6 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = '/email-confirmed/'
 ACCOUNT_EMAIL_CONFIRMATION_ANONYMOUS_REDIRECT_URL = '/email-confirmed/'
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3
-# aiik bogw axil tydn
 
 # Django settings.py
 AUTHENTICATION_BACKENDS = [
@@ -111,27 +111,10 @@ CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'oglasBE.urls'
 
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]
-
 WSGI_APPLICATION = 'oglasBE.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',

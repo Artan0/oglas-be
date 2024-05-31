@@ -2,12 +2,15 @@ from django.shortcuts import render
 
 from rest_framework import viewsets, request
 
+from rest_framework.pagination import PageNumberPagination
+
 from .models import Ad, Auction, Bid, Message, Event, Wishlist, CarAd
+
 from .serializer import AdSerializer, AuctionSerializer, BidSerializer, MessageSerializer, EventSerializer, \
     WishlistSerializer, CustomRegisterSerializer, UserProfileUpdateSerializer, UserInfoSerializer
+
 from allauth.account.views import ConfirmEmailView
 from dj_rest_auth.registration.views import RegisterView
-
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import generics, permissions
@@ -126,3 +129,29 @@ class AdViewSet(viewsets.ModelViewSet):
                 'adType': ad.adType
             }
             CarAd.objects.create(ad_ptr_id=ad.id, **car_data)
+
+
+class UserAdsPagination(PageNumberPagination):
+    page_size = 9
+    page_query_param = 'page'
+    page_size_query_param = 'size'
+    max_page_size = 1000
+
+    def get_paginated_response(self, data):
+        return Response({
+            'count': self.page.paginator.count,
+            'next': self.get_next_link(),
+            'previous': self.get_previous_link(),
+            'results': data,
+            'total_pages': self.page.paginator.num_pages
+        })
+
+
+class UserAdsViewSet(viewsets.ModelViewSet):
+    serializer_class = AdSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = UserAdsPagination
+
+    def get_queryset(self):
+        user = self.request.user
+        return Ad.objects.filter(owner=user)
