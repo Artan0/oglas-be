@@ -104,6 +104,8 @@ MIDDLEWARE = [
 ]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
+    "https://oglas-1b0b6.firebaseapp.com",
+    "https://oglas-1b0b6.appspot.com"
 ]
 CORS_ALLOW_CREDENTIALS = True
 

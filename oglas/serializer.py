@@ -46,13 +46,6 @@ class UserProfileUpdateSerializer(serializers.ModelSerializer):
         fields = ['first_name', 'last_name', 'phone_number', 'email', 'username']
 
 
-class AdSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Ad
-        fields = ['id', 'title', 'description', 'price', 'ad_type', 'imageUrl', 'owner', 'created_at', 'updated_at',
-                  'is_active', 'address', 'location']
-
-
 class AuctionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Auction
@@ -83,9 +76,16 @@ class WishlistSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'ad', 'added_date']
 
 
+class AdSerializer(serializers.ModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.email')
+
+    class Meta:
+        model = Ad
+        fields = ['id', 'title', 'description', 'price', 'ad_type', 'location', 'address', 'category', 'imageUrl',
+                  'owner', 'created_at', 'updated_at', 'is_active']
+
+
 class CarAdSerializer(serializers.ModelSerializer):
     class Meta:
         model = CarAd
-        fields = ['id', 'title', 'description', 'price', 'ad_type', 'imageUrl', 'owner', 'created_at', 'updated_at',
-                  'is_active', 'address', 'location', 'manufacturer', 'year', 'mileage', 'color', 'fuel_type',
-                  'car_type']
+        fields = ['manufacturer', 'year', 'mileage', 'fuel_type', 'color']
