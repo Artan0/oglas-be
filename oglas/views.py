@@ -1,25 +1,33 @@
 from django.shortcuts import render
 
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, request
 from rest_framework.exceptions import ValidationError
 
 from .models import Ad, Auction, Bid, Message, Event, Wishlist
 from .serializer import AdSerializer, AuctionSerializer, BidSerializer, MessageSerializer, EventSerializer, \
-    WishlistSerializer, CustomRegisterSerializer
+    WishlistSerializer, CustomRegisterSerializer, UserProfileUpdateSerializer, UserInfoSerializer
 from allauth.account.views import ConfirmEmailView
 from dj_rest_auth.registration.views import RegisterView
 
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework import generics, permissions
+from rest_framework.permissions import IsAuthenticated
+
 
 @api_view(['GET'])
 def get_authenticated_user_info(request):
     user = request.user
-    user_info = {
-        'username': user.username,
-        'email': user.email,
-    }
-    return Response(user_info)
+    serializer = UserInfoSerializer(user)
+    return Response(serializer.data)
+
+
+class UserProfileUpdateView(generics.UpdateAPIView):
+    serializer_class = UserProfileUpdateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
 
 
 class CustomRegisterView(RegisterView):
@@ -36,7 +44,7 @@ class CustomConfirmEmailView(ConfirmEmailView):
         return render(request, "account/email/email_confirmed_template.html")
 
     def post(self, *args, **kwargs):
-        return self.get(*args, **kwargs)
+        return self.get(request, *args, **kwargs)
 
 
 class AdViewSet(viewsets.ModelViewSet):

@@ -7,7 +7,6 @@ class CustomRegisterSerializer(RegisterSerializer):
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
     phone_number = serializers.CharField(required=True)
-    date_of_birth = serializers.DateField(required=False)
 
     def get_cleaned_data(self):
         data = super().get_cleaned_data()
@@ -17,15 +16,34 @@ class CustomRegisterSerializer(RegisterSerializer):
         return data
 
 
-def to_representation(self, instance):
-    data = super().to_representation(instance)
-    request = self.context.get('request')
-    if request and request.user.is_authenticated:
-        data['user_info'] = {
-            'username': request.user.username,
-            'email': request.user.email,
-        }
-    return data
+# def to_representation(self, instance):
+#     data = super().to_representation(instance)
+#     request = self.context.get('request')
+#     if request and request.user.is_authenticated:
+#         data['user_info'] = {
+#             'username': request.user.username,
+#             'first_name': request.user.first_name,
+#             'last_name': request.user.last_name,
+#             'email': request.user.email,
+#             'phone_number': request.user.phone_number,
+#         }
+#     return data
+class UserInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = [
+            'username', 'first_name', 'last_name', 'email',
+            'phone_number', 'date_of_birth', 'role'
+        ]
+
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(read_only=True)
+    username = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = CustomUser
+        fields = ['first_name', 'last_name', 'phone_number', 'email', 'username']
 
 
 class AdSerializer(serializers.ModelSerializer):

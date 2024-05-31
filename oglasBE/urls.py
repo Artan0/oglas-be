@@ -20,7 +20,7 @@ from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
 
 from oglas.views import AdViewSet, AuctionViewSet, BidViewSet, MessageViewSet, EventViewSet, WishlistViewSet, \
-    CustomConfirmEmailView, CustomRegisterView, get_authenticated_user_info
+    CustomConfirmEmailView, CustomRegisterView, get_authenticated_user_info, UserProfileUpdateView
 
 router = DefaultRouter()
 router.register(r'ads', AdViewSet)
@@ -40,5 +40,6 @@ urlpatterns = [
          name='email_confirmed'),
     path('accounts/confirm-email/<str:key>/', CustomConfirmEmailView.as_view(), name='account_confirm_email'),
     path('user-info/', get_authenticated_user_info, name='get_authenticated_user_info'),
+    path('edit-profile/', UserProfileUpdateView.as_view(), name='user-profile-update'),
 
 ]
