@@ -1,7 +1,6 @@
 from django.shortcuts import render
 
-from rest_framework import viewsets, permissions, request
-from rest_framework.exceptions import ValidationError
+from rest_framework import viewsets, request
 
 from .models import Ad, Auction, Bid, Message, Event, Wishlist, CarAd
 from .serializer import AdSerializer, AuctionSerializer, BidSerializer, MessageSerializer, EventSerializer, \
@@ -29,12 +28,18 @@ def get_choices(request):
     ad_types = Ad.AD_TYPES
     categories = Ad.CATEGORY_CHOICES
     manufacturers = CarAd.MANUFACTURER_CHOICES
+    fuel = CarAd.FUEL_CHOICES
+    color = CarAd.COLOR_CHOICES
+    car_type = CarAd.CAR_TYPE_CHOICES
 
     return Response({
         'cities': cities,
         'ad_types': ad_types,
         'categories': categories,
         'manufacturers': manufacturers,
+        'colors': color,
+        'car_types': car_type,
+        'fuels': fuel
     })
 
 
@@ -100,6 +105,24 @@ class AdViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         ad = serializer.save(owner=self.request.user)
-        if self.request.data.get('category') == 'car':
-            car_data = self.request.data
-            CarAd.objects.create(ad=ad, **car_data)
+        if ad.category == 'car':
+            car_data = {
+                'manufacturer': self.request.data.get('manufacturer'),
+                'year': self.request.data.get('year'),
+                'mileage': self.request.data.get('mileage'),
+                'fuel_type': self.request.data.get('fuel_type'),
+                'color': self.request.data.get('color'),
+                'car_type': self.request.data.get('car_type'),
+                'price': ad.price,
+                'title': ad.title,
+                'description': ad.description,
+                'address': ad.address,
+                'created_at': ad.created_at,
+                'updated_at': ad.updated_at,
+                'owner': ad.owner,
+                'location': ad.location,
+                'imageUrl': ad.imageUrl,
+                'category': ad.category,
+                'adType': ad.adType
+            }
+            CarAd.objects.create(ad_ptr_id=ad.id, **car_data)

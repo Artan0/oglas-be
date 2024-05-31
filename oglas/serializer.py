@@ -81,11 +81,10 @@ class AdSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ad
-        fields = ['id', 'title', 'description', 'price', 'ad_type', 'location', 'address', 'category', 'imageUrl',
-                  'owner', 'created_at', 'updated_at', 'is_active']
+        fields = '__all__'
 
 
 class CarAdSerializer(serializers.ModelSerializer):
     class Meta:
         model = CarAd
-        fields = ['manufacturer', 'year', 'mileage', 'fuel_type', 'color']
+        fields = '__all__'
