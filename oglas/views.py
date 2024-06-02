@@ -1,20 +1,19 @@
-from django.shortcuts import render
-
-from rest_framework import viewsets, request
-
-from rest_framework.pagination import PageNumberPagination
-
-from .models import Ad, Auction, Bid, Message, Event, Wishlist, CarAd
-
-from .serializer import AdSerializer, AuctionSerializer, BidSerializer, MessageSerializer, EventSerializer, \
-    WishlistSerializer, CustomRegisterSerializer, UserProfileUpdateSerializer, UserInfoSerializer
-
 from allauth.account.views import ConfirmEmailView
 from dj_rest_auth.registration.views import RegisterView
+from django.shortcuts import render
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics, permissions, status
+from rest_framework import viewsets, request, filters
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from rest_framework import generics, permissions
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from django_filters import rest_framework as filters
+
+from .models import Ad, Auction, Bid, Message, Event, Wishlist, CarAd
+from .serializer import AdSerializer, AuctionSerializer, BidSerializer, MessageSerializer, EventSerializer, \
+    WishlistSerializer, CustomRegisterSerializer, UserProfileUpdateSerializer, UserInfoSerializer, CarAdSerializer
 
 
 @api_view(['GET'])
@@ -155,3 +154,82 @@ class UserAdsViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return Ad.objects.filter(owner=user)
+
+
+class AdFilter(filters.FilterSet):
+    price_from = filters.NumberFilter(field_name='price', lookup_expr='gte')
+    price_to = filters.NumberFilter(field_name='price', lookup_expr='lte')
+    year_from = filters.NumberFilter(field_name='year', lookup_expr='gte')
+    year_to = filters.NumberFilter(field_name='year', lookup_expr='lte')
+    mileage_from = filters.NumberFilter(field_name='mileage', lookup_expr='gte')
+    mileage_to = filters.NumberFilter(field_name='mileage', lookup_expr='lte')
+
+    class Meta:
+        model = Ad
+        fields = ['price_from', 'price_to', 'year_from', 'year_to', 'mileage_from', 'mileage_to']
+
+
+class AdListView(APIView):
+    permission_classes = []
+
+    def get(self, request):
+        category = request.query_params.get('category')
+        location = request.query_params.get('location')
+        ad_type = request.query_params.get('adType')
+        from_date = request.query_params.get('fromDate')
+        to_date = request.query_params.get('toDate')
+        manufacturer = request.query_params.get('manufacturer')
+        car_type = request.query_params.get('car_type')
+        fuel_type = request.query_params.get('fuelType')
+        color = request.query_params.get('color')
+        year_from = request.query_params.get('yearFrom')
+        year_to = request.query_params.get('yearTo')
+        price_from = request.query_params.get('priceFrom')
+        price_to = request.query_params.get('priceTo')
+        mileage_from = request.query_params.get('mileageFrom')
+        mileage_to = request.query_params.get('mileageTo')
+
+        # Get all ads
+        ads = Ad.objects.all()
+
+        if category:
+            ads = ads.filter(category=category)
+        if location:
+            ads = ads.filter(location=location)
+        if ad_type:
+            ads = ads.filter(ad_type=ad_type)
+        if from_date:
+            ads = ads.filter(created_at__gte=from_date)
+        if to_date:
+            ads = ads.filter(created_at__lte=to_date)
+        if price_from:
+            ads = ads.filter(price__gte=price_from)
+        if price_to:
+            ads = ads.filter(price__lte=price_to)
+        if category == "car":
+            car_filter = AdFilter(request.query_params, queryset=CarAd.objects.all())
+            ads = car_filter.qs
+            if manufacturer:
+                ads = ads.filter(manufacturer=manufacturer)
+            if car_type:
+                ads = ads.filter(car_type=car_type)
+            if fuel_type:
+                ads = ads.filter(fuel_type=fuel_type)
+            if color:
+                ads = ads.filter(color=color)
+            if year_from:
+                ads = ads.filter(year__gte=year_from)
+            if year_to:
+                ads = ads.filter(year__lte=year_to)
+            if mileage_from:
+                ads = ads.filter(mileage__gte=mileage_from)
+            if mileage_to:
+                ads = ads.filter(mileage__lte=mileage_to)
+
+        paginator = UserAdsPagination()
+        page_obj = paginator.paginate_queryset(ads, request)
+
+        serializer = AdSerializer(page_obj, many=True)
+
+        response_data = paginator.get_paginated_response(serializer.data)
+        return Response(response_data.data, status=status.HTTP_200_OK)

@@ -13,7 +13,6 @@ class CustomUser(AbstractUser):
     phone_number = models.CharField(max_length=100, blank=True, null=True)
     email = models.EmailField(_('email address'), unique=True,
                               error_messages={'unique': "A user with that email already exists."})
-
     first_name = models.CharField( max_length=150)
     last_name = models.CharField(max_length=150)
     username = models.CharField(max_length=150, unique=False, blank=True, null=True)
@@ -90,7 +89,6 @@ class Ad(models.Model):
         ('car', 'Car'),
         ('motorcycle', 'Motorcycle'),
         ('house', 'House'),
-        ('rent', 'Rent'),
     ]
 
     title = models.CharField(max_length=255)
@@ -100,8 +98,8 @@ class Ad(models.Model):
     location = models.CharField(max_length=150, choices=CITY_CHOICES, default=CITY_CHOICES[0][0])
     address = models.CharField(max_length=150, default="Macedonia")
     imageUrl = models.CharField(max_length=500, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateField(auto_now_add=True)
+    updated_at = models.DateField(auto_now=True)
     owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
     category = models.CharField(max_length=100, choices=CATEGORY_CHOICES, default=CATEGORY_CHOICES[0])
