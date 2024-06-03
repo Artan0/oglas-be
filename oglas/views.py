@@ -188,7 +188,8 @@ class AdListView(APIView):
         price_to = request.query_params.get('priceTo')
         mileage_from = request.query_params.get('mileageFrom')
         mileage_to = request.query_params.get('mileageTo')
-
+        search_title = request.query_params.get('search')
+        sort_by = request.query_params.get('sort')
         # Get all ads
         ads = Ad.objects.all()
 
@@ -206,6 +207,8 @@ class AdListView(APIView):
             ads = ads.filter(price__gte=price_from)
         if price_to:
             ads = ads.filter(price__lte=price_to)
+        if search_title:
+            ads = ads.filter(title__icontains=search_title)
         if category == "car":
             car_filter = AdFilter(request.query_params, queryset=CarAd.objects.all())
             ads = car_filter.qs
@@ -225,6 +228,16 @@ class AdListView(APIView):
                 ads = ads.filter(mileage__gte=mileage_from)
             if mileage_to:
                 ads = ads.filter(mileage__lte=mileage_to)
+
+        if sort_by:
+            if sort_by == 'newest':
+                ads = ads.order_by('-created_at')
+            elif sort_by == 'oldest':
+                ads = ads.order_by('created_at')
+            elif sort_by == 'priceLowToHigh':
+                ads = ads.order_by('price')
+            elif sort_by == 'priceHighToLow':
+                ads = ads.order_by('-price')
 
         paginator = UserAdsPagination()
         page_obj = paginator.paginate_queryset(ads, request)
