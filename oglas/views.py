@@ -5,6 +5,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, status
 from rest_framework import viewsets, request, filters
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -246,3 +247,10 @@ class AdListView(APIView):
 
         response_data = paginator.get_paginated_response(serializer.data)
         return Response(response_data.data, status=status.HTTP_200_OK)
+
+
+class AdDetailsView(RetrieveAPIView):
+    permission_classes = []
+    queryset = Ad.objects.all()
+    serializer_class = AdSerializer
+    lookup_field = 'id'

@@ -21,7 +21,7 @@ from rest_framework.routers import DefaultRouter
 
 from oglas.views import AdViewSet, AuctionViewSet, BidViewSet, MessageViewSet, EventViewSet, WishlistViewSet, \
     CustomConfirmEmailView, CustomRegisterView, get_authenticated_user_info, UserProfileUpdateView, get_choices, \
-    UserAdsViewSet, AdListView
+    UserAdsViewSet, AdListView, AdDetailsView
 
 router = DefaultRouter()
 router.register(r'ads', AdViewSet)
@@ -46,5 +46,6 @@ urlpatterns = [
     path('ad/add/', AdViewSet.as_view({'post': 'create'}), name='ad-add'),
     path('user-ads/', UserAdsViewSet.as_view({'get': 'list'}), name='user-ads'),
     path('ads/', AdListView.as_view(), name='ad-list'),
+    path('ad/<int:id>/', AdDetailsView.as_view(), name='ad-details'),
 
 ]

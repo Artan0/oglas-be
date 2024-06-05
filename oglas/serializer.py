@@ -77,7 +77,8 @@ class WishlistSerializer(serializers.ModelSerializer):
 
 
 class AdSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.email')
+    # owner = serializers.ReadOnlyField(source='owner.email')
+    owner = UserInfoSerializer(read_only=True)
 
     class Meta:
         model = Ad
@@ -85,6 +86,8 @@ class AdSerializer(serializers.ModelSerializer):
 
 
 class CarAdSerializer(serializers.ModelSerializer):
+    owner = UserInfoSerializer(read_only=True)
+
     class Meta:
         model = CarAd
         fields = '__all__'
