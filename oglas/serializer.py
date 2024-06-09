@@ -77,12 +77,21 @@ class WishlistSerializer(serializers.ModelSerializer):
 
 
 class AdSerializer(serializers.ModelSerializer):
-    # owner = serializers.ReadOnlyField(source='owner.email')
     owner = UserInfoSerializer(read_only=True)
+    car_details = serializers.SerializerMethodField()
 
     class Meta:
         model = Ad
         fields = '__all__'
+
+    def get_car_details(self, obj):
+        if obj.category == 'car':
+            try:
+                car_ad = CarAd.objects.get(id=obj.id)
+                return CarAdSerializer(car_ad).data
+            except CarAd.DoesNotExist:
+                return None
+        return None
 
 
 class CarAdSerializer(serializers.ModelSerializer):
@@ -90,4 +99,18 @@ class CarAdSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CarAd
+        fields = ['manufacturer', 'car_type', 'color', 'fuel_type', 'mileage', 'year', 'owner']
+
+
+class EditCarAdSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CarAd
+        fields = '__all__'
+
+
+class EditAdSerializer(serializers.ModelSerializer):
+    imageUrl = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Ad
         fields = '__all__'

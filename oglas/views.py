@@ -1,12 +1,18 @@
+import json
+
 from allauth.account.views import ConfirmEmailView
 from dj_rest_auth.registration.views import RegisterView
+from django.http import JsonResponse
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, permissions, status
 from rest_framework import viewsets, request, filters
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.generics import RetrieveAPIView
+from rest_framework.generics import RetrieveAPIView, UpdateAPIView, DestroyAPIView
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.parsers import JSONParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,7 +20,8 @@ from django_filters import rest_framework as filters
 
 from .models import Ad, Auction, Bid, Message, Event, Wishlist, CarAd
 from .serializer import AdSerializer, AuctionSerializer, BidSerializer, MessageSerializer, EventSerializer, \
-    WishlistSerializer, CustomRegisterSerializer, UserProfileUpdateSerializer, UserInfoSerializer, CarAdSerializer
+    WishlistSerializer, CustomRegisterSerializer, UserProfileUpdateSerializer, UserInfoSerializer, CarAdSerializer, \
+    EditAdSerializer, EditCarAdSerializer
 
 
 @api_view(['GET'])
@@ -126,7 +133,7 @@ class AdViewSet(viewsets.ModelViewSet):
                 'location': ad.location,
                 'imageUrl': ad.imageUrl,
                 'category': ad.category,
-                'adType': ad.adType
+                'ad_type': ad.ad_type
             }
             CarAd.objects.create(ad_ptr_id=ad.id, **car_data)
 
@@ -254,3 +261,56 @@ class AdDetailsView(RetrieveAPIView):
     queryset = Ad.objects.all()
     serializer_class = AdSerializer
     lookup_field = 'id'
+
+
+@require_http_methods(["GET", "PUT"])
+@csrf_exempt
+@api_view(['GET', 'PUT'])
+def edit_ad(request, ad_id):
+    try:
+        ad = Ad.objects.get(id=ad_id)
+    except Ad.DoesNotExist:
+        return JsonResponse({"error": "Ad not found"}, status=404)
+
+    if request.method == "GET":
+        serializer = AdSerializer(ad)
+        return JsonResponse(serializer.data)
+
+
+    elif request.method == "PUT":
+
+        try:
+
+            ad = Ad.objects.get(id=ad_id)
+            data = json.loads(request.body.decode('utf-8'))
+            ad.title = data.get("title", ad.title)
+            ad.description = data.get("description", ad.description)
+            ad.price = data.get("price", ad.price)
+            ad.ad_type = data.get("ad_type", ad.ad_type)
+            ad.address = data.get("address", ad.address)
+            ad.location = data.get("location", ad.location)
+            ad.category = data.get("category", ad.category)
+
+            if ad.category == "car":
+                try:
+                    ad = CarAd.objects.get(id=ad_id)
+                    ad.manufacturer = data.get("manufacturer", ad.manufacturer)
+                    ad.year = data.get("year", ad.year)
+                    ad.mileage = data.get("mileage", ad.mileage)
+                    ad.fuel_type = data.get("fuel_type", ad.fuel_type)
+                    ad.color = data.get("color", ad.color)
+                    ad.car_type = data.get("car_type", ad.car_type)
+
+                except CarAd.DoesNotExist:
+                    return JsonResponse({"error": "CarAd details not found"}, status=404)
+            ad.save()
+            return JsonResponse({"success": "Ad updated successfully"})
+        except Ad.DoesNotExist:
+            return JsonResponse({"error": "Ad not found"}, status=404)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON data"}, status=400)
+
+
+class DeleteAdView(DestroyAPIView):
+    queryset = Ad.objects.all()
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]

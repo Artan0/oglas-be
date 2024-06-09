@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 
 
@@ -103,6 +105,7 @@ class Ad(models.Model):
     owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
     category = models.CharField(max_length=100, choices=CATEGORY_CHOICES, default=CATEGORY_CHOICES[0])
+
 
     def __str__(self):
         return self.title
@@ -242,5 +245,13 @@ class CarAd(Ad):
     color = models.CharField(max_length=100, choices=COLOR_CHOICES)
     car_type = models.CharField(max_length=100, choices=CAR_TYPE_CHOICES)
 
+    @receiver(post_delete, sender=Ad)
+    def delete_related_car_ad(sender, instance, **kwargs):
+        if instance.category == 'car':
+            try:
+                car_ad = CarAd.objects.get(id=instance.id)
+                car_ad.delete()
+            except CarAd.DoesNotExist:
+                pass
     def __str__(self):
         return self.title
