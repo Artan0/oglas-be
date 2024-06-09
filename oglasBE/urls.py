@@ -19,17 +19,11 @@ from django.urls import path, include
 from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
 
-from oglas.views import AdViewSet, AuctionViewSet, BidViewSet, MessageViewSet, EventViewSet, WishlistViewSet, \
+from oglas.views import AdViewSet, WishlistViewSet, \
     CustomConfirmEmailView, CustomRegisterView, get_authenticated_user_info, UserProfileUpdateView, get_choices, \
-    UserAdsViewSet, AdListView, AdDetailsView, DeleteAdView, edit_ad
+    UserAdsViewSet, AdListView, AdDetailsView, DeleteAdView, edit_ad, AddToWishlist, WishlistView, RemoveFromWishlist
 
-router = DefaultRouter()
-router.register(r'ads', AdViewSet)
-router.register(r'auctions', AuctionViewSet)
-router.register(r'bids', BidViewSet)
-router.register(r'messages', MessageViewSet)
-router.register(r'events', EventViewSet)
-router.register(r'wishlists', WishlistViewSet)
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -49,5 +43,8 @@ urlpatterns = [
     path('ad/<int:id>/', AdDetailsView.as_view(), name='ad-details'),
     path('ad/edit/<int:ad_id>/', edit_ad, name='ad-edit'),
     path('ad/delete/<int:pk>/', DeleteAdView.as_view(), name='ad-delete'),
+    path('wishlist/add/', AddToWishlist.as_view(), name='add_to_wishlist'),
+    path('wishlist/', WishlistView.as_view(), name='wishlist'),
+    path('wishlist/remove/<int:ad_id>/', RemoveFromWishlist.as_view(), name='remove_from_wishlist'),
 
 ]

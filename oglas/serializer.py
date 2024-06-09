@@ -70,12 +70,6 @@ class EventSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'description', 'date', 'location', 'host']
 
 
-class WishlistSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Wishlist
-        fields = ['id', 'user', 'ad', 'added_date']
-
-
 class AdSerializer(serializers.ModelSerializer):
     owner = UserInfoSerializer(read_only=True)
     car_details = serializers.SerializerMethodField()
@@ -114,3 +108,11 @@ class EditAdSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ad
         fields = '__all__'
+
+
+class WishlistSerializer(serializers.ModelSerializer):
+    ad = AdSerializer()
+
+    class Meta:
+        model = Wishlist
+        fields = ['id', 'user', 'ad', 'added_date']

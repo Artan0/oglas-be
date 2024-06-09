@@ -24,6 +24,7 @@ from .serializer import AdSerializer, AuctionSerializer, BidSerializer, MessageS
     EditAdSerializer, EditCarAdSerializer
 
 
+# USER API
 @api_view(['GET'])
 def get_authenticated_user_info(request):
     user = request.user
@@ -78,35 +79,48 @@ class CustomConfirmEmailView(ConfirmEmailView):
         return self.get(request, *args, **kwargs)
 
 
-class AuctionViewSet(viewsets.ModelViewSet):
-    queryset = Auction.objects.all()
-    serializer_class = AuctionSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+class UserAdsPagination(PageNumberPagination):
+    page_size = 9
+    page_query_param = 'page'
+    page_size_query_param = 'size'
+    max_page_size = 1000
+
+    def get_paginated_response(self, data):
+        return Response({
+            'count': self.page.paginator.count,
+            'next': self.get_next_link(),
+            'previous': self.get_previous_link(),
+            'results': data,
+            'total_pages': self.page.paginator.num_pages
+        })
 
 
-class BidViewSet(viewsets.ModelViewSet):
-    queryset = Bid.objects.all()
-    serializer_class = BidSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+class UserAdsViewSet(viewsets.ModelViewSet):
+    serializer_class = AdSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = UserAdsPagination
+
+    def get_queryset(self):
+        user = self.request.user
+        return Ad.objects.filter(owner=user)
 
 
-class MessageViewSet(viewsets.ModelViewSet):
-    queryset = Message.objects.all()
-    serializer_class = MessageSerializer
-    permission_classes = [permissions.IsAuthenticated]
+# USER API END
+
+class AdFilter(filters.FilterSet):
+    price_from = filters.NumberFilter(field_name='price', lookup_expr='gte')
+    price_to = filters.NumberFilter(field_name='price', lookup_expr='lte')
+    year_from = filters.NumberFilter(field_name='year', lookup_expr='gte')
+    year_to = filters.NumberFilter(field_name='year', lookup_expr='lte')
+    mileage_from = filters.NumberFilter(field_name='mileage', lookup_expr='gte')
+    mileage_to = filters.NumberFilter(field_name='mileage', lookup_expr='lte')
+
+    class Meta:
+        model = Ad
+        fields = ['price_from', 'price_to', 'year_from', 'year_to', 'mileage_from', 'mileage_to']
 
 
-class EventViewSet(viewsets.ModelViewSet):
-    queryset = Event.objects.all()
-    serializer_class = EventSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-
-class WishlistViewSet(viewsets.ModelViewSet):
-    queryset = Wishlist.objects.all()
-    serializer_class = WishlistSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
+# AD API
 
 class AdViewSet(viewsets.ModelViewSet):
     queryset = Ad.objects.all()
@@ -136,45 +150,6 @@ class AdViewSet(viewsets.ModelViewSet):
                 'ad_type': ad.ad_type
             }
             CarAd.objects.create(ad_ptr_id=ad.id, **car_data)
-
-
-class UserAdsPagination(PageNumberPagination):
-    page_size = 9
-    page_query_param = 'page'
-    page_size_query_param = 'size'
-    max_page_size = 1000
-
-    def get_paginated_response(self, data):
-        return Response({
-            'count': self.page.paginator.count,
-            'next': self.get_next_link(),
-            'previous': self.get_previous_link(),
-            'results': data,
-            'total_pages': self.page.paginator.num_pages
-        })
-
-
-class UserAdsViewSet(viewsets.ModelViewSet):
-    serializer_class = AdSerializer
-    permission_classes = [IsAuthenticated]
-    pagination_class = UserAdsPagination
-
-    def get_queryset(self):
-        user = self.request.user
-        return Ad.objects.filter(owner=user)
-
-
-class AdFilter(filters.FilterSet):
-    price_from = filters.NumberFilter(field_name='price', lookup_expr='gte')
-    price_to = filters.NumberFilter(field_name='price', lookup_expr='lte')
-    year_from = filters.NumberFilter(field_name='year', lookup_expr='gte')
-    year_to = filters.NumberFilter(field_name='year', lookup_expr='lte')
-    mileage_from = filters.NumberFilter(field_name='mileage', lookup_expr='gte')
-    mileage_to = filters.NumberFilter(field_name='mileage', lookup_expr='lte')
-
-    class Meta:
-        model = Ad
-        fields = ['price_from', 'price_to', 'year_from', 'year_to', 'mileage_from', 'mileage_to']
 
 
 class AdListView(APIView):
@@ -218,8 +193,7 @@ class AdListView(APIView):
         if search_title:
             ads = ads.filter(title__icontains=search_title)
         if category == "car":
-            car_filter = AdFilter(request.query_params, queryset=CarAd.objects.all())
-            ads = car_filter.qs
+            ads = CarAd.objects.filter(ad_ptr_id__in=ads.values('id'))
             if manufacturer:
                 ads = ads.filter(manufacturer=manufacturer)
             if car_type:
@@ -276,11 +250,8 @@ def edit_ad(request, ad_id):
         serializer = AdSerializer(ad)
         return JsonResponse(serializer.data)
 
-
     elif request.method == "PUT":
-
         try:
-
             ad = Ad.objects.get(id=ad_id)
             data = json.loads(request.body.decode('utf-8'))
             ad.title = data.get("title", ad.title)
@@ -314,3 +285,46 @@ def edit_ad(request, ad_id):
 class DeleteAdView(DestroyAPIView):
     queryset = Ad.objects.all()
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+
+# AD API END
+
+# WISHLIST API
+class WishlistViewSet(viewsets.ModelViewSet):
+    queryset = Wishlist.objects.all()
+    serializer_class = WishlistSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class AddToWishlist(APIView):
+    def post(self, request):
+        ad_id = request.data.get('ad_id')
+        user = request.user
+
+        if Wishlist.objects.filter(ad_id=ad_id, user=user).exists():
+            return Response({'message': 'Ad is already in the wishlist'}, status=status.HTTP_400_BAD_REQUEST)
+
+        wishlist_item = Wishlist.objects.create(user=user, ad_id=ad_id)
+        serializer = WishlistSerializer(wishlist_item)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class WishlistView(APIView):
+    def get(self, request):
+        user = request.user
+        wishlist_items = Wishlist.objects.filter(user=user)
+        serializer = WishlistSerializer(wishlist_items, many=True)
+        return Response(serializer.data)
+
+
+class RemoveFromWishlist(APIView):
+    def delete(self, request, ad_id):
+        user = request.user
+        try:
+            wishlist_item = Wishlist.objects.get(user=user, ad_id=ad_id)
+            wishlist_item.delete()
+            return Response({'message': 'Ad removed from wishlist'}, status=status.HTTP_204_NO_CONTENT)
+        except Wishlist.DoesNotExist:
+            return Response({'message': 'Ad not found in wishlist'}, status=status.HTTP_404_NOT_FOUND)
+
+# WISHLIST API END

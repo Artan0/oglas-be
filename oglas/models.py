@@ -159,7 +159,7 @@ class Event(models.Model):
 class Wishlist(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     ad = models.ForeignKey(Ad, on_delete=models.CASCADE)
-    added_date = models.DateTimeField(auto_now_add=True)
+    added_date = models.DateField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.user.username}'s wishlist"
