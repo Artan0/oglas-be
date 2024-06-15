@@ -18,8 +18,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django_filters import rest_framework as filters
 
-from .models import Ad, Auction, Bid, Message, Event, Wishlist, CarAd
-from .serializer import AdSerializer, AuctionSerializer, BidSerializer, MessageSerializer, EventSerializer, \
+from .models import Ad, Auction, Bid, Wishlist, CarAd
+from .serializer import AdSerializer, AuctionSerializer, BidSerializer,\
     WishlistSerializer, CustomRegisterSerializer, UserProfileUpdateSerializer, UserInfoSerializer, CarAdSerializer, \
     EditAdSerializer, EditCarAdSerializer
 
@@ -128,7 +128,8 @@ class AdViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
-        ad = serializer.save(owner=self.request.user)
+        image_urls = self.request.data.get('image_urls', [])
+        ad = serializer.save(owner=self.request.user, image_urls=image_urls)
         if ad.category == 'car':
             car_data = {
                 'manufacturer': self.request.data.get('manufacturer'),
@@ -145,7 +146,7 @@ class AdViewSet(viewsets.ModelViewSet):
                 'updated_at': ad.updated_at,
                 'owner': ad.owner,
                 'location': ad.location,
-                'imageUrl': ad.imageUrl,
+                'image_urls': ad.image_urls,
                 'category': ad.category,
                 'ad_type': ad.ad_type
             }

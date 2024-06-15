@@ -1,12 +1,12 @@
 from rest_framework import serializers
-from .models import CustomUser, Ad, Auction, Bid, Message, Event, Wishlist, CarAd
+from .models import CustomUser, Ad, Auction, Bid, Wishlist, CarAd
 from dj_rest_auth.registration.serializers import RegisterSerializer
 
 
 class CustomRegisterSerializer(RegisterSerializer):
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
-    phone_number = serializers.CharField(required=True)
+    phone_number = serializers.CharField(required=False)
 
     def get_cleaned_data(self):
         data = super().get_cleaned_data()
@@ -58,18 +58,6 @@ class BidSerializer(serializers.ModelSerializer):
         fields = ['id', 'auction', 'bidder', 'bid_amount', 'bid_time', 'is_highest_bid']
 
 
-class MessageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Message
-        fields = ['id', 'sender', 'receiver', 'content', 'timestamp', 'read']
-
-
-class EventSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Event
-        fields = ['id', 'title', 'description', 'date', 'location', 'host']
-
-
 class AdSerializer(serializers.ModelSerializer):
     owner = UserInfoSerializer(read_only=True)
     car_details = serializers.SerializerMethodField()
@@ -77,6 +65,13 @@ class AdSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ad
         fields = '__all__'
+
+    def create(self, validated_data):
+        image_urls = validated_data.pop('image_urls', [])
+        instance = super().create(validated_data)
+        instance.image_urls = image_urls
+        instance.save()
+        return instance
 
     def get_car_details(self, obj):
         if obj.category == 'car':

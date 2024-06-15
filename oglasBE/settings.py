@@ -1,4 +1,6 @@
 from pathlib import Path
+import firebase_admin
+from firebase_admin import credentials, storage
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -142,7 +144,12 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
+# Initialize Firebase Admin SDK
+cred = credentials.Certificate("D:\oglas-fe/oglas-1b0b6-firebase-adminsdk-c2ajn-c0aae977f4.json")
+firebase_admin.initialize_app(cred, {
+    'storageBucket': 'oglas-1b0b6.appspot.com'
+})
+firebase_storage_bucket = storage.bucket()
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 

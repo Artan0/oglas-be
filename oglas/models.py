@@ -1,9 +1,12 @@
+from urllib.parse import unquote
+
 from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
-
+from firebase_admin import storage
 
 class CustomUser(AbstractUser):
     USER_ROLES = (
@@ -99,14 +102,34 @@ class Ad(models.Model):
     ad_type = models.CharField(max_length=4, choices=AD_TYPES)
     location = models.CharField(max_length=150, choices=CITY_CHOICES, default=CITY_CHOICES[0][0])
     address = models.CharField(max_length=150, default="Macedonia")
-    imageUrl = models.CharField(max_length=500, blank=True, null=True)
+    image_urls = ArrayField(models.CharField(max_length=500, blank=True, null=True), default=list)
     created_at = models.DateField(auto_now_add=True)
     updated_at = models.DateField(auto_now=True)
     owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
     category = models.CharField(max_length=100, choices=CATEGORY_CHOICES, default=CATEGORY_CHOICES[0])
 
+    def delete(self, *args, **kwargs):
+        # Delete images from Firebase Storage
+        if self.image_urls:
+            for url in self.image_urls:
+                # Extract filename from the URL
+                filename_with_params = url.split('/')[-1]
+                filename = unquote(filename_with_params.split('?')[0])  # Decode URL and remove query params
 
+                # Initialize Firebase Storage
+                bucket = storage.bucket()
+
+                # Delete the file
+                try:
+                    blob = bucket.blob(filename)
+                    blob.delete()
+                    print(f"Successfully deleted image {filename} from Firebase Storage")
+                except Exception as e:
+                    print(f"Failed to delete image {filename} from Firebase Storage: {e}")
+
+        # Call the parent delete method
+        super().delete(*args, **kwargs)
     def __str__(self):
         return self.title
 
@@ -134,26 +157,8 @@ class Bid(models.Model):
         return f"Bid of {self.bid_amount} by {self.bidder.username} for {self.auction.ad.title}"
 
 
-class Message(models.Model):
-    sender = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='sent_messages')
-    receiver = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='received_messages')
-    content = models.TextField()
-    timestamp = models.DateTimeField(auto_now_add=True)
-    read = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"Message from {self.sender.username} to {self.receiver.username}"
 
 
-class Event(models.Model):
-    title = models.CharField(max_length=255)
-    description = models.TextField()
-    date = models.DateTimeField()
-    location = models.CharField(max_length=255)
-    host = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.title
 
 
 class Wishlist(models.Model):
