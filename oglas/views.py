@@ -253,8 +253,8 @@ def edit_ad(request, ad_id):
 
     elif request.method == "PUT":
         try:
-            ad = Ad.objects.get(id=ad_id)
             data = json.loads(request.body.decode('utf-8'))
+
             ad.title = data.get("title", ad.title)
             ad.description = data.get("description", ad.description)
             ad.price = data.get("price", ad.price)
@@ -265,20 +265,19 @@ def edit_ad(request, ad_id):
 
             if ad.category == "car":
                 try:
-                    ad = CarAd.objects.get(id=ad_id)
-                    ad.manufacturer = data.get("manufacturer", ad.manufacturer)
-                    ad.year = data.get("year", ad.year)
-                    ad.mileage = data.get("mileage", ad.mileage)
-                    ad.fuel_type = data.get("fuel_type", ad.fuel_type)
-                    ad.color = data.get("color", ad.color)
-                    ad.car_type = data.get("car_type", ad.car_type)
-
+                    car_ad = CarAd.objects.get(id=ad_id)
+                    car_ad.manufacturer = data.get("manufacturer", car_ad.manufacturer)
+                    car_ad.year = data.get("year", car_ad.year)
+                    car_ad.mileage = data.get("mileage", car_ad.mileage)
+                    car_ad.fuel_type = data.get("fuel_type", car_ad.fuel_type)
+                    car_ad.color = data.get("color", car_ad.color)
+                    car_ad.car_type = data.get("car_type", car_ad.car_type)
+                    car_ad.save()
                 except CarAd.DoesNotExist:
                     return JsonResponse({"error": "CarAd details not found"}, status=404)
+
             ad.save()
             return JsonResponse({"success": "Ad updated successfully"})
-        except Ad.DoesNotExist:
-            return JsonResponse({"error": "Ad not found"}, status=404)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON data"}, status=400)
 
