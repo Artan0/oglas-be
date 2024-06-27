@@ -22,6 +22,7 @@ class CustomUser(AbstractUser):
     last_name = models.CharField(max_length=150)
     username = models.CharField(max_length=150, unique=False, blank=True, null=True)
     date_of_birth = models.DateField(blank=True, null=True)
+    is_verified = models.BooleanField(default=False)
     groups = models.ManyToManyField(
         Group,
         related_name='customuser_set',
@@ -40,7 +41,7 @@ class CustomUser(AbstractUser):
     )
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = ['first_name', 'last_name', 'username']
 
     def __str__(self):
         return self.email
@@ -48,6 +49,7 @@ class CustomUser(AbstractUser):
 
 class Ad(models.Model):
     CITY_CHOICES = [
+        ('All', 'All'),
         ('Berovo', 'Berovo'),
         ('Bitola', 'Bitola'),
         ('Bogdanci', 'Bogdanci'),
@@ -90,6 +92,7 @@ class Ad(models.Model):
     ]
 
     CATEGORY_CHOICES = [
+        ('All', 'All'),
         ('general', 'General'),
         ('car', 'Car'),
         ('motorcycle', 'Motorcycle'),
@@ -108,6 +111,7 @@ class Ad(models.Model):
     owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
     category = models.CharField(max_length=100, choices=CATEGORY_CHOICES, default=CATEGORY_CHOICES[0])
+    is_featured = models.BooleanField(default=False)
 
     def delete(self, *args, **kwargs):
         # Delete images from Firebase Storage
@@ -174,6 +178,7 @@ class Wishlist(models.Model):
 
 class CarAd(Ad):
     MANUFACTURER_CHOICES = [
+        ('All', 'All'),
         ('Audi', 'Audi'),
         ('BMW', 'BMW'),
         ('Mercedes-Benz', 'Mercedes-Benz'),
@@ -210,6 +215,7 @@ class CarAd(Ad):
     ]
 
     FUEL_CHOICES = [
+        ('All', 'All'),
         ('Gasoline', 'Gasoline'),
         ('Diesel', 'Diesel'),
         ('Electric', 'Electric'),
@@ -217,6 +223,7 @@ class CarAd(Ad):
     ]
 
     COLOR_CHOICES = [
+        ('All', 'All'),
         ('Red', 'Red'),
         ('Blue', 'Blue'),
         ('Green', 'Green'),
@@ -232,6 +239,7 @@ class CarAd(Ad):
     ]
 
     CAR_TYPE_CHOICES = [
+        ('All', 'All'),
         ('Compact Car', 'Compact Car'),
         ('Sedan', 'Sedan'),
         ('Hatchback', 'Hatchback'),

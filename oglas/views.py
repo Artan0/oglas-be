@@ -19,7 +19,7 @@ from rest_framework.views import APIView
 from django_filters import rest_framework as filters
 
 from .models import Ad, Auction, Bid, Wishlist, CarAd
-from .serializer import AdSerializer, AuctionSerializer, BidSerializer,\
+from .serializer import AdSerializer, AuctionSerializer, BidSerializer, \
     WishlistSerializer, CustomRegisterSerializer, UserProfileUpdateSerializer, UserInfoSerializer, CarAdSerializer, \
     EditAdSerializer, EditCarAdSerializer
 
@@ -174,14 +174,15 @@ class AdListView(APIView):
         mileage_to = request.query_params.get('mileageTo')
         search_title = request.query_params.get('search')
         sort_by = request.query_params.get('sort')
+
         # Get all ads
         ads = Ad.objects.all()
 
-        if category:
+        if category and category != 'All':
             ads = ads.filter(category=category)
-        if location:
+        if location and location != 'All':
             ads = ads.filter(location=location)
-        if ad_type:
+        if ad_type and ad_type != 'All':
             ads = ads.filter(ad_type=ad_type)
         if from_date:
             ads = ads.filter(created_at__gte=from_date)
@@ -193,15 +194,16 @@ class AdListView(APIView):
             ads = ads.filter(price__lte=price_to)
         if search_title:
             ads = ads.filter(title__icontains=search_title)
+
         if category == "car":
             ads = CarAd.objects.filter(ad_ptr_id__in=ads.values('id'))
-            if manufacturer:
+            if manufacturer and manufacturer != 'All':
                 ads = ads.filter(manufacturer=manufacturer)
-            if car_type:
+            if car_type and car_type != 'All':
                 ads = ads.filter(car_type=car_type)
-            if fuel_type:
+            if fuel_type and fuel_type != 'All':
                 ads = ads.filter(fuel_type=fuel_type)
-            if color:
+            if color and color != 'All':
                 ads = ads.filter(color=color)
             if year_from:
                 ads = ads.filter(year__gte=year_from)
@@ -285,6 +287,29 @@ def edit_ad(request, ad_id):
 class DeleteAdView(DestroyAPIView):
     queryset = Ad.objects.all()
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+
+class FeaturedAdsView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        ads = Ad.objects.filter(is_featured=True)[:4]
+        serializer = AdSerializer(ads, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class SimilarAdsView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, ad_id):
+        try:
+            ad = Ad.objects.get(id=ad_id)
+        except Ad.DoesNotExist:
+            return Response({"error": "Ad not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        similar_ads = Ad.objects.filter(category=ad.category).exclude(id=ad_id)[:4]
+        serializer = AdSerializer(similar_ads, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # AD API END
